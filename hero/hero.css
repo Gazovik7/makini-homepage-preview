@@ -1,0 +1,157 @@
+/* ==================================================================
+   Makini hero - orbit rings.
+   Native header, native hero copy and buttons. Everything below is
+   additive: nothing overrides .m-header / .m-h1 / .home-subheading /
+   .price-card-btn.
+   ================================================================== */
+
+body{overflow-x:hidden}
+
+/* ==================================================================
+   hero - an ordinary section, no pinning. The orbit choreography is
+   tied to how far the hero has scrolled past the top of the viewport,
+   so it plays out inside one screen of scrolling and then the whole
+   section leaves like any other.
+   ================================================================== */
+.wh-stage{position:relative;background:#0b0a14}
+.wh-hero{position:relative;min-height:100vh;overflow:hidden;
+  background:#0b0a14;display:flex;align-items:center;padding:120px 0 80px}
+.wh-hero > .m-container{position:relative;z-index:5;width:100%;
+  transform:translate3d(0,var(--cy,0px),0);opacity:var(--co,1)}
+
+/* the native hero box, re-centred. copy, buttons and classes untouched. */
+.wh-hero .home-s1-box{padding-top:0;margin-bottom:0;text-align:center}
+.wh-hero .home-s1-box .m-h1{margin-left:auto;margin-right:auto}
+.wh-hero .home-s1-box .home-subheading{margin-left:auto;margin-right:auto;text-align:center}
+.wh-hero .home-s2-left-btns{justify-content:center}
+.wh-hero .s1-list-features_main{justify-content:center}
+
+/* ==================================================================
+   orbit rings
+   ================================================================== */
+.wh-rings{position:absolute;inset:0;z-index:0;pointer-events:none;opacity:var(--ro,1)}
+.wh-ring{position:absolute;inset:0;will-change:transform}
+
+/* --dx/--dy/--ssc are driven by scroll and must never lag, so no transition
+   sits on this element's transform */
+.wh-tile{position:absolute;left:var(--x);top:var(--y);width:var(--s);height:var(--s);
+  margin-left:calc(var(--s) / -2);margin-top:calc(var(--s) / -2);
+  transform:translate3d(var(--dx,0px),var(--dy,0px),0) scale(var(--ssc,1));
+  opacity:var(--op,1);
+  transition:opacity .3s ease;will-change:transform}
+.wh-tile .sc{width:100%;height:100%;transform:scale(var(--sc,1));
+  transition:transform .35s cubic-bezier(.2,.8,.2,1)}
+.wh-tile .fl{width:100%;height:100%;
+  animation:whFloat var(--dur,16s) ease-in-out infinite;animation-delay:var(--t,0s)}
+.wh-tile .in{width:100%;height:100%;border-radius:calc(var(--s) * .235);overflow:hidden;
+  background:#fff;transform:rotate(calc(var(--r,0deg) * var(--rk,1)));
+  filter:blur(var(--bl,0px)) saturate(var(--sat,1)) brightness(var(--br,1));
+  transition:filter .3s ease}
+.wh-tile .in img{width:100%;height:100%;object-fit:cover;display:block}
+/* --fk damps the drift to zero as a tile lands on the rail, so the finished
+   line is dead still instead of bobbing */
+@keyframes whFloat{0%,100%{transform:translate3d(0,0,0)}
+  50%{transform:translate3d(0,calc(-16px * var(--fk,1)),0)}}
+
+/* pointer focus: the nearest system racks into focus and names itself */
+.wh-tile.focus{--bl:0px !important;--op:1 !important;--sat:1.1;--br:1.06;z-index:6}
+.wh-tile.focus .sc{--sc:1.14}
+.wh-tile .name{position:absolute;left:50%;top:calc(100% + 9px);transform:translateX(-50%);
+  padding:4px 10px;border-radius:999px;white-space:nowrap;opacity:0;pointer-events:none;
+  font:500 11px/1 Inter,Arial,sans-serif;color:#e6e7ea;background:#12121ae6;
+  border:1px solid #ffffff26;backdrop-filter:blur(8px);transition:opacity .25s ease}
+.wh-tile.focus .name{opacity:1}
+
+/* veil: keeps the centre readable and fades the rings into the page */
+.wh-veil{position:absolute;inset:0;z-index:1;pointer-events:none;opacity:var(--vo,1);
+  background:
+    radial-gradient(ellipse 34% 40% at 50% 50%,#0b0a14 0%,#0b0a14f2 50%,#0b0a1400 78%),
+    linear-gradient(#0b0a14 0%,#0b0a1400 18%,#0b0a1400 82%,#0b0a14 100%)}
+
+.wh-glow{position:absolute;left:50%;bottom:-240px;transform:translateX(-50%);
+  width:1080px;height:560px;z-index:2;pointer-events:none;filter:blur(110px);
+  opacity:calc(.4 * var(--go,1));
+  background:radial-gradient(closest-side,#71a1ff 0%,#71a1ff52 38%,#ef68f230 66%,transparent 80%)}
+
+.wh-spot{position:absolute;left:0;top:0;width:820px;height:820px;border-radius:50%;z-index:2;
+  pointer-events:none;filter:blur(100px);opacity:0;transition:opacity .5s ease;
+  background:radial-gradient(closest-side,#71a1ff4d 0%,#9468f229 42%,transparent 72%)}
+.wh-hero.live .wh-spot{opacity:1}
+
+/* the rail the systems land on once the orbit has unwrapped */
+.wh-rail{position:absolute;left:0;right:0;top:50%;height:1px;z-index:1;pointer-events:none;
+  /* top is overwritten from JS so the rail and the landed row share one number */
+  opacity:var(--rlo,0);transform:translate3d(0,var(--rly,0px),0);
+  background:linear-gradient(90deg,transparent,#71a1ff4d 18%,#ef68f266 50%,#9468f24d 82%,transparent)}
+
+/* ==================================================================
+   the two gateways and the fan into the systems
+   ================================================================== */
+/* The whole fan is a handful of STATIC paths: rasterised once, never touched
+   again. It used to be 12 strokes + 12 blur(4px) halos + 12 dash-animated
+   strokes per gateway, and every one of them forced a full-viewport SVG
+   repaint on every frame. */
+.wh-links{position:absolute;inset:0;z-index:3;pointer-events:none;opacity:var(--lo,1)}
+.wh-links path{fill:none;vector-effect:non-scaling-stroke}
+
+/* the flow is sold by a few small dots instead, each riding a generated
+   translate3d keyframe track, so it runs on the compositor */
+.wh-packets{position:absolute;inset:0;z-index:3;pointer-events:none;opacity:var(--lo,1)}
+.wh-packets.off .wh-pk{animation-play-state:paused}
+.wh-pk{position:absolute;left:0;top:0;width:5px;height:5px;margin:-2.5px 0 0 -2.5px;
+  border-radius:50%;opacity:0;will-change:transform,opacity}
+
+/* the pair sits in the normal flow under the copy, so its position comes from
+   the layout instead of a guessed offset, and a short viewport can never push
+   it into the feature row */
+.wh-ports{position:relative;z-index:5;display:flex;justify-content:center;
+  align-items:stretch;gap:18px;flex-wrap:wrap;margin:38px 0 0;opacity:var(--lo,1)}
+.wh-port{position:relative;
+  display:flex;align-items:center;gap:12px;padding:13px 18px;border-radius:16px;
+  background:#101019e6;backdrop-filter:blur(16px);border:1px solid #ffffff1f;
+  box-shadow:0 26px 60px -26px #000;text-align:left;white-space:nowrap}
+.wh-port::before{content:"";position:absolute;inset:-1px;border-radius:inherit;padding:1px;
+  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);
+  -webkit-mask-composite:xor;mask-composite:exclude;pointer-events:none}
+.wh-port.api::before{background:linear-gradient(135deg,#71a1ff,#5485e5);opacity:.65}
+.wh-port.mcp::before{background:linear-gradient(135deg,#ef68f2,#9468f2);opacity:.65}
+.wh-port.api{box-shadow:0 26px 60px -26px #000,0 0 60px -18px #71a1ff}
+.wh-port.mcp{box-shadow:0 26px 60px -26px #000,0 0 60px -18px #ef68f2}
+.wh-port .ic{width:38px;height:38px;flex:none;border-radius:11px;display:grid;place-items:center}
+.wh-port.api .ic{background:linear-gradient(135deg,#71a1ff33,#5485e526);border:1px solid #71a1ff40}
+.wh-port.mcp .ic{background:linear-gradient(135deg,#ef68f233,#9468f226);border:1px solid #ef68f240}
+.wh-port .ic svg{width:20px;height:20px;fill:none;stroke-width:1.7;
+  stroke-linecap:round;stroke-linejoin:round}
+.wh-port.api .ic svg{stroke:#acbaff}
+.wh-port.mcp .ic svg{stroke:#ebb2ff}
+.wh-port b{display:block;font:600 14px/1.25 Inter,Arial,sans-serif;color:#fff}
+.wh-port span{display:block;margin-top:3px;font:400 11.5px/1 "JetBrains Mono",monospace;
+  letter-spacing:.03em;color:#8d8f97}
+
+/* ==================================================================
+   responsive
+   ================================================================== */
+@media(max-width:1180px){
+  .wh-port{padding:11px 14px;gap:10px}
+  .wh-port b{font-size:13px}
+  .wh-port span{font-size:10.5px}
+}
+@media(max-width:991px){
+  .wh-hero{min-height:0;padding:126px 0 76px}
+  .wh-hero .home-s1-box .home-subheading{max-width:520px}
+  /* no room for the fan next to the copy on a tablet */
+  .wh-links,.wh-packets,.wh-rail{display:none}
+  .wh-ports{gap:12px;margin-top:36px}
+}
+@media(max-width:767px){
+  .wh-hero{padding:104px 0 64px}
+  .wh-hero .home-s2-left-btns{flex-direction:column;align-items:center;gap:14px}
+  .wh-hero .home-s2-left-btns .price-card-btn{width:100%;max-width:320px}
+  .wh-ports{flex-direction:column;align-items:center}
+  .wh-port{width:100%;max-width:320px}
+}
+@media(prefers-reduced-motion:reduce){
+  .wh-hero{min-height:0}
+  .wh-tile .fl,.wh-links .flow{animation:none}
+  .wh-tile .sc,.wh-tile{transition:none}
+}
